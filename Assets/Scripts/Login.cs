@@ -17,7 +17,9 @@ public class Login : MonoBehaviour
     public InputField username;
     public InputField password;
     public InputField email;
-
+    public InputField resetCode;
+    public GameObject basePanel, loginPanel;
+    public GameObject resetButton;
     private string characters = "0123456789abcdefghijklmnopqrstuvwxABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private string code = "";
 
@@ -25,7 +27,7 @@ public class Login : MonoBehaviour
 
     void CreateCode()
     {
-        for (int i = 0; i < 20; i++)
+        for (int i = 0; i < 5; i++)
         {
             int a = UnityEngine.Random.Range(0, characters.Length);
             code = code + characters[a];
@@ -43,6 +45,15 @@ public class Login : MonoBehaviour
         UnityWebRequest webRequest = UnityWebRequest.Post(createUserURL,form);
         yield return webRequest.SendWebRequest();
         Debug.Log(webRequest.downloadHandler.text);
+        if(webRequest.downloadHandler.text == "Login Successful")
+        {
+            NextScene.LoadSceneNext();
+        }
+        else
+        {
+            basePanel.SetActive(true);
+            loginPanel.SetActive(false);
+        }
     }
 
     public void UserLogin()
@@ -50,13 +61,14 @@ public class Login : MonoBehaviour
         StartCoroutine(LoginUser(username.text, password.text));
     }
 
-    void SendEmail(InputField _email)
+    public void SendEmail(InputField _email)
     {
+        CreateCode();
         MailMessage mail = new MailMessage();
         mail.From = new MailAddress ("sqlunityclasssydney@gmail.com");
         mail.To.Add(_email.text);
         mail.Subject = "NSIRPGPassword Reset";
-        mail.Body = "Hello " + _username + "\nReset using this code: " + "CODE";
+        mail.Body = "Hello " + _username + "\nReset using this code: " + code;
 
         SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
         smtpServer.Port = 25;
@@ -80,12 +92,12 @@ public class Login : MonoBehaviour
         Debug.Log(webRequest.downloadHandler.text);
         if (webRequest.downloadHandler.text == "User Not Found")
         {
-   
            // notification.text = webRequest.downloadHandler.text;
         }
         else
         {
             _username = webRequest.downloadHandler.text;
+            Debug.Log("User set to " + _username);
             SendEmail(_email);
         }
     }
@@ -93,6 +105,30 @@ public class Login : MonoBehaviour
     {
         Debug.Log(_email.text);
         StartCoroutine(ForgotPassword(_email));
+    }
+    IEnumerator UpdatePassword(string _password)
+    {
+        string forgottonPasswordURL = "http://localhost/nsirpg/UpdatePassword.php";
+        WWWForm form = new WWWForm();
+        form.AddField("password_Post", _password);
+        form.AddField("username_Post", _username);
+
+        UnityWebRequest webRequest = UnityWebRequest.Post(forgottonPasswordURL, form);
+        yield return webRequest.SendWebRequest();
+        Debug.Log(webRequest.downloadHandler.text);
+    }
+    public void ChangePassword(InputField _password)
+    {
+        string pass = _password.text;
+        StartCoroutine(UpdatePassword(pass));
+    }
+
+    public void CheckCode()
+    {
+        if (resetCode.text == code)
+        {
+            resetButton.SetActive(true);
+        }
     }
 }
 

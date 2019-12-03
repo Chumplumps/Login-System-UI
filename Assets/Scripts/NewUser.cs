@@ -14,6 +14,7 @@ public class NewUser : MonoBehaviour
 
     IEnumerator CreateUser(string username, string email, string password)
     {
+        Debug.Log(username+ "\n"+ email +"\n" +password);
         string createUserURL = "http://localhost/nsirpg/insertUser.php";
         WWWForm form = new WWWForm();
         form.AddField("username", username);
@@ -21,6 +22,8 @@ public class NewUser : MonoBehaviour
         form.AddField("password", password);
         UnityWebRequest webRequest = UnityWebRequest.Post(createUserURL,form);
         yield return webRequest.SendWebRequest();
+        Debug.Log(webRequest.downloadHandler.text);
+
     }
     public void CreateNewUser()
     {
